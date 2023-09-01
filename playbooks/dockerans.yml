@@ -1,0 +1,56 @@
+---
+- name: Bootstrap
+  hosts: main
+  gather_facts: False
+  become: true
+
+  tasks:
+  - name: Install deps packages
+    package:
+      name: "{{item}}"
+      update_cache: true
+    loop:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+  - name: Add Docker GPG apt Key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add Docker Repository
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu focal stable
+      state: present
+
+  - name: Update apt and install docker-ce and docker-compose
+    apt:
+      pkg:
+        - docker-ce
+        - docker-compose
+      state: latest
+      update_cache: true
+
+  - name: Install Docker Module for Python
+    pip:
+      name: docker
+
+  - name: Pull Backend Docker image
+    command: docker pull galdevops/biu12_red_backend_09:latest
+    when: inventory_hostname == groups['main'][0]
+
+  - name: Build Backend Docker container
+    command: docker run -d --name biu12-backend -p 3001:3001 galdevops/biu12_red_backend_09:latest
+    when: inventory_hostname == groups['main'][0]
+
+  - name: Pull Frontend Docker image
+    command: docker pull galdevops/biu12_red_frontend_09:latest
+    when: inventory_hostname == groups['main'][1]
+
+  - name: Build Frontend Docker container
+    command: docker run -d --name biu12-frontend -p 3000:3000 galdevops/biu12_red_frontend_09:latest
+    when: inventory_hostname == groups['main'][1]

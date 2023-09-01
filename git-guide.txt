@@ -1,0 +1,4 @@
+1. git clone <git_url>
+2. git switch -c <new_branch_name>
+3. make changes
+4. git push –set-upstream origin <new_branch_name>
